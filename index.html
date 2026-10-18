@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PnL Card Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Kanit:wght@500;700&family=Unbounded:wght@500;700&family=Chakra+Petch:wght@500;700&family=Orbitron:wght@500;700&family=Rajdhani:wght@500;700&family=Space+Grotesk:wght@500;700&family=Sora:wght@500;700&family=JetBrains+Mono:wght@400;500;700&family=Bebas+Neue&family=Anton&display=swap">
+<style>
+:root{--bg:#0a0c10;--surface:#10131a;--wall:#0b0d12;--field:#0c0f14;--line:#1c212b;--line2:#2d3441;--fg:#e4e7ec;--muted:#8a93a3;--dim:#586070;--gold:#4f8cff;--gold2:#2f66d6;--ok:#0ecb81;--bad:#f6465d;--r:6px;--ui:'Prompt',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--fg);font:300 14px/1.55 var(--ui);padding:20px 28px 64px}
+::selection{background:#4f8cff40}
+*{scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+.tape{max-width:1380px;margin:0 auto 26px;display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:9px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);font:500 12.5px var(--mono);color:var(--muted)}
+.tape .st{display:flex;align-items:center;gap:8px;color:var(--dim)}.tape .st i{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.tape[data-s=on] .st{color:var(--ok)}.tape[data-s=on] .st i{background:var(--ok);box-shadow:0 0 8px var(--ok);animation:b 1.6s infinite}
+.tape b{font-weight:700;color:var(--fg)}.tape #tkPx{font-size:15px;transition:color .3s}.tape #tkPx.up{color:var(--ok)}.tape #tkPx.dn{color:var(--bad)}
+.tape #tkPx.up::after{content:" ▲";font-size:10px}.tape #tkPx.dn::after{content:" ▼";font-size:10px}
+.tape .sp{margin-left:auto}
+.wrap{max-width:1380px;margin:0 auto;display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:28px;align-items:start}
+h1{margin:0;display:flex;align-items:center;gap:12px;font:600 20px/1.2 var(--ui)}
+h1::before{content:"";flex:none;width:30px;height:30px;border-radius:5px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 13l4.5-5 3.5 3L16 4'/%3E%3C/svg%3E") center/18px no-repeat,var(--gold)}
+.sub{margin:10px 0 20px;color:var(--muted);font-size:13px}
+.panel{display:flex;flex-direction:column;gap:10px;min-width:0}
+details{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:0 16px;transition:border-color .2s}
+details[open]{border-color:var(--line2)}
+summary{cursor:pointer;padding:13px 0 13px 12px;list-style:none;display:flex;justify-content:space-between;align-items:center;font:500 14px var(--ui);color:var(--muted);position:relative;transition:color .2s}
+summary::before{content:"";position:absolute;left:0;top:50%;width:3px;height:14px;margin-top:-7px;border-radius:2px;background:var(--line2);transition:background .2s}
+details[open] summary::before{background:var(--gold)}
+summary:hover,details[open] summary{color:var(--fg)}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);transition:transform .25s}
+details[open] summary::after{transform:rotate(-135deg) translate(-2px,-2px)}
+details[open] summary{border-bottom:1px solid var(--line);margin:0 -16px 16px;padding-left:28px;padding-right:16px}
+details[open] summary::before{left:14px}
+.body{padding:0 0 18px;display:grid;grid-template-columns:1fr 1fr;gap:14px 12px}.full{grid-column:1/-1}
+label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);min-width:0}
+input,select{background:var(--field);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:9px 11px;font:400 13px var(--mono);width:100%;min-width:0;font-variant-numeric:tabular-nums;transition:border-color .2s,box-shadow .2s}
+select{font-family:var(--ui)}
+input::placeholder{color:var(--dim)}
+input:hover,select:hover{border-color:var(--line2)}
+input:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px #4f8cff33}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+select{appearance:none;-webkit-appearance:none;padding-right:30px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%237b8797' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+input[type=file]{padding:5px 8px;font:400 12px var(--ui);color:var(--muted)}
+input[type=file]::file-selector-button{background:#ffffff0a;border:1px solid var(--line2);color:var(--fg);border-radius:3px;padding:4px 11px;margin-right:10px;font:400 12px var(--ui);cursor:pointer}
+input[type=color]{padding:3px;height:38px;cursor:pointer}
+input[type=color]::-webkit-color-swatch-wrapper{padding:0}input[type=color]::-webkit-color-swatch{border:none;border-radius:2px}
+input[type=color]::-moz-color-swatch{border:none;border-radius:2px}
+input[type=range]{-webkit-appearance:none;appearance:none;padding:0;height:24px;background:transparent;border:none;box-shadow:none!important}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--line2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:16px;border-radius:2px;background:var(--gold);margin-top:-6.5px;border:none}
+input[type=range]::-moz-range-track{height:3px;background:var(--line2)}
+input[type=range]::-moz-range-thumb{width:12px;height:16px;border-radius:2px;background:var(--gold);border:none}
+.check{flex-direction:row;align-items:flex-start;gap:10px;color:var(--fg);font-size:13px;line-height:1.5}.check input{width:16px;height:16px;flex:none;margin-top:2px;padding:0;accent-color:var(--gold)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg button{padding:11px;border:1px solid var(--line2);border-radius:4px;background:var(--field);color:var(--muted);font:600 13.5px var(--ui);cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.seg button:hover{color:var(--fg);border-color:var(--muted)}
+.seg button[data-v=buy].on{background:var(--ok);border-color:var(--ok);color:#03150d}
+.seg button[data-v=sell].on{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn{padding:9px 16px;border-radius:4px;border:1px solid var(--line2);background:#ffffff06;color:var(--fg);font:500 13px var(--ui);cursor:pointer;transition:border-color .2s,background .2s,transform .1s;white-space:nowrap}
+.btn:hover{border-color:var(--muted);background:#ffffff10}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--gold);color:#fff;border-color:var(--gold);font-weight:600}.btn.primary:hover{background:#6a9fff;border-color:#6a9fff}
+.btn:disabled{opacity:.45;cursor:wait}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.hint{font-size:12px;color:var(--muted);line-height:1.65;margin:0}
+.live{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-left:3px solid var(--dim);border-radius:4px;padding:11px 14px;background:var(--field)}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--dim);flex:none}.live.on{border-left-color:var(--ok)}.live.on i{background:var(--ok);box-shadow:0 0 8px var(--ok);animation:b 1.6s infinite}.live.off{border-left-color:var(--bad)}.live.off i{background:var(--bad)}
+.live b{font:700 21px var(--mono);font-variant-numeric:tabular-nums;transition:color .3s}.live b.up{color:var(--ok)}.live b.dn{color:var(--bad)}.live span{font-size:11.5px;color:var(--muted);margin-left:auto;text-align:right}
+@keyframes b{50%{opacity:.35}}
+.stage{position:sticky;top:20px;display:flex;flex-direction:column;gap:14px;min-width:0;max-height:calc(100vh - 40px);overflow-y:auto;scrollbar-width:none}
+.stage::-webkit-scrollbar{display:none}
+.stagebox{background:linear-gradient(#ffffff05 1px,transparent 1px) 0 0/100% 32px,linear-gradient(90deg,#ffffff05 1px,transparent 1px) 0 0/32px 100%,radial-gradient(600px 300px at 50% 0,#4f8cff12 0,transparent 70%),var(--wall);border:1px solid var(--line);border-radius:var(--r);padding:30px;display:flex;justify-content:center}
+#cv{max-width:100%;max-height:44vh;width:auto;height:auto;box-shadow:0 26px 60px #000c,0 0 0 1px #ffffff14}
+.meta{margin:-4px 0 0;font:400 11.5px var(--mono);color:var(--dim);text-align:center}
+.stage>div:last-child{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.ex{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:12px 16px;align-items:center;padding:11px 14px;margin-bottom:8px;background:var(--field);border:1px solid var(--line);border-radius:4px}
+.ex>span{font:500 13.5px var(--ui);color:var(--fg)}.ex small{display:block;font:300 11.5px var(--ui);color:var(--muted)}
+.ex .opts{display:flex;gap:8px;min-width:0}.ex .opts select{padding:7px 28px 7px 10px;font-size:12.5px;background-color:var(--surface)}
+.tabs{display:flex;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px}
+.tabs button{flex:1;padding:9px 8px;border:none;border-radius:4px;background:transparent;color:var(--muted);font:500 13px var(--ui);cursor:pointer;transition:background .15s,color .15s}
+.tabs button:hover{color:var(--fg)}.tabs button.on{background:var(--gold);color:#fff}
+.stage>.tabs{margin-bottom:0}
+textarea{background:var(--field);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:9px 11px;font:400 12.5px var(--mono);width:100%;resize:vertical}
+textarea:hover{border-color:var(--line2)}textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px #4f8cff33}
+@media(max-width:960px){body{padding:14px 14px 48px}.wrap{grid-template-columns:minmax(0,1fr);gap:24px}.stage{position:static;order:-1;max-height:none}.stagebox{padding:18px}.ex{grid-template-columns:1fr auto}.ex .opts{grid-column:1/-1;order:3}#cv{max-height:60vh}.tape{gap:12px}.tape .sp{margin-left:0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="tape" id="tape"><span class="st"><i></i>LIVE</span><b id="tkSym">—</b><b id="tkPx">—</b><span id="tkSrc"></span><span class="sp" id="tkClk"></span></div>
+<div class="wrap">
+<section class="panel">
+  <h1>PnL Card Studio</h1><p class="sub">เลือกสินทรัพย์ ปรับแต่งการ์ด แล้วส่งออกเป็น PNG, GIF หรือวิดีโอ</p>
+  <div class="tabs" id="tabs"><button type="button" data-t="o" class="on">ออเดอร์</button><button type="button" data-t="d">ตกแต่งการ์ด</button><button type="button" data-t="t">สรุป &amp; เครื่องมือ</button></div>
+
+  <details open><summary>ออเดอร์</summary><div class="body">
+    <label class="full">สินทรัพย์<select id="inst"></select></label>
+    <div class="full live" id="live"><i></i><b id="lp">—</b><span id="ls">กำลังเชื่อมต่อ…</span></div>
+    <label class="full" id="customSymWrap" hidden>ชื่อสินทรัพย์เอง<input id="customSym" value="XYZ / USD"></label>
+    <div class="full seg" id="dir"><button type="button" data-v="buy" class="on">Long (Buy)</button><button type="button" data-v="sell">Short (Sell)</button></div>
+    <label>ราคาเข้า (Entry)<input id="entry" type="number" step="any" value="4000"></label>
+    <label>ราคาปิด / Mark<input id="exit" type="number" step="any" value="4012"></label>
+    <label class="check full"><input id="follow" type="checkbox" checked>Mark วิ่งตามราคา real-time (พิมพ์เองเพื่อล็อกค่า)</label>
+    <div class="full row"><button class="btn" id="toEntry" type="button">ใช้ราคา live เป็น Entry</button><button class="btn" id="toMark" type="button">กลับไปตาม live</button></div>
+    <label>ขนาด Lot<input id="lots" type="number" step="any" value="1"></label>
+    <label>$ ต่อ 1.00 ราคา ต่อ 1 lot<input id="mult" type="number" step="any" value="100"></label>
+    <label>ขนาด 1 point (ราคา)<input id="pip" type="number" step="any" value="0.1"></label>
+    <label>บาลานซ์พอร์ต $ (ไม่บังคับ)<input id="bal" type="number" step="any" placeholder="เช่น 10000"></label>
+    <label class="full">แก้ PnL เอง $ (ว่าง = คำนวณ)<input id="pnlOver" type="number" step="any" placeholder="อัตโนมัติ"></label>
+    <p class="hint full">ค่า $ ต่อ lot ขึ้นกับโบรกเกอร์ ตรวจสเปคสัญญาก่อนใช้</p>
+  </div></details>
+
+  <details><summary>ข้อความบนการ์ด</summary><div class="body">
+    <label>ชื่อโปรเจกต์<input id="brand" value="LARP PROJECT"></label>
+    <label>ป้ายบนขวา<input id="tag"></label>
+    <label class="check full"><input id="tagAuto" type="checkbox" checked>ป้ายผูกกับสินทรัพย์ (ทอง/ forex = CFD · ดัชนี/หุ้น = Futures · คริปโต = Perpetual)</label>
+    <label>Username<input id="user" value="@PNL.Studio"></label>
+    <label>วันที่<input id="date"></label>
+    <label>ป้ายราคาเข้า<input id="lblEntry" value="Entry Price"></label>
+    <label>ป้ายราคาปิด<input id="lblExit" value="Mark Price"></label>
+    <label>สกุลเงินใต้ PnL<input id="ccy" value="USD"></label>
+    <label class="full">ไอคอนหน้าชื่อโปรเจกต์<input id="iconFile" type="file" accept="image/*"></label>
+    <label class="full">รูปโปรไฟล์<input id="avFile" type="file" accept="image/*"></label>
+  </div></details>
+
+  <details open><summary>พื้นหลังและสี</summary><div class="body">
+    <label class="full">ลิงก์พื้นหลัง (mp4, webm, gif, รูป)<input id="bgUrl" placeholder="https://.../background.mp4"></label>
+    <label class="full">หรืออัปโหลดไฟล์<input id="bgFile" type="file" accept="image/*,video/*"></label>
+    <label>การจัดวาง<select id="bgFit"><option value="cover">เต็มการ์ด</option><option value="contain">พอดี</option></select></label>
+    <label>ความมืด overlay<input id="shadeA" type="range" min="0" max="90" value="30"></label>
+    <label>สีตกแต่ง (มุม/ไอคอน/แสง)<select id="accMode"><option value="bg">ตามสีพื้นหลัง (อัตโนมัติ)</option><option value="pnl">ตามกำไร/ขาดทุน</option><option value="custom">กำหนดเอง</option></select></label>
+    <label>สีกำหนดเอง<input id="cAcc" type="color" value="#4f8cff"></label>
+    <div class="full row"><button class="btn" id="resample" type="button">ดึงสีจากเฟรมปัจจุบัน</button><button class="btn" id="bgClear" type="button">ลบพื้นหลัง</button></div>
+    <p class="hint full">ลิงก์ที่เว็บต้นทางไม่เปิด CORS จะเล่นในพรีวิวได้ แต่บันทึกไฟล์ไม่ได้ ให้โหลดไฟล์มาแล้วอัปโหลดแทน</p>
+  </div></details>
+
+  <details><summary>ขนาดและสไตล์</summary><div class="body">
+    <label class="full">ธีมสำเร็จรูป<select id="theme"><option value="">เลือกธีม…</option></select></label>
+    <label class="full">ขนาดสำเร็จรูป<select id="preset">
+      <option value="1600x900">แนวนอน 16:9 (1600×900)</option><option value="1920x1080">Full HD (1920×1080)</option><option value="1200x900">4:3 (1200×900)</option>
+      <option value="1080x1350">แนวตั้ง 4:5 (1080×1350)</option><option value="1080x1080">จัตุรัส (1080×1080)</option><option value="1080x1920">Story 9:16 (1080×1920)</option><option value="custom">กำหนดเอง</option></select></label>
+    <label>ความกว้าง (px)<input id="W" type="number" min="400" max="3000" value="1600"></label>
+    <label>ความสูง (px)<input id="H" type="number" min="300" max="3000" value="900"></label>
+    <label>สีกำไร<input id="cWin" type="color" value="#0ecb81"></label>
+    <label>สีขาดทุน<input id="cLoss" type="color" value="#f6465d"></label>
+    <label class="full">ฟอนต์การ์ด<select id="font"></select></label>
+    <label>มุมการ์ด (px)<input id="radius" type="range" min="0" max="80" value="28"></label>
+    <label class="check"><input id="animOn" type="checkbox" checked>เล่นแอนิเมชันในพรีวิว</label>
+  </div></details>
+  <details><summary>ข้อมูลเสริมบนการ์ด</summary><div class="body">
+    <label>Leverage (เท่า)<input id="lev" type="number" min="0" step="any" placeholder="เช่น 20 → แสดง ROE"></label>
+    <label>ป้ายสถานะบัญชี<select id="demo"><option value="">ไม่แสดง</option><option>DEMO ACCOUNT</option><option>PAPER TRADE</option><option>SIMULATION</option><option>REAL ACCOUNT</option><option>FUNDED ACCOUNT</option></select></label>
+    <label>เวลาเปิดออเดอร์<input id="tOpen" type="datetime-local"></label>
+    <label>เวลาปิดออเดอร์<input id="tClose" type="datetime-local"></label>
+    <label class="check full"><input id="rOn" type="checkbox">แสดงค่า R (ใช้ Stop Loss จากเครื่องคำนวณ lot)</label>
+    <label class="check full"><input id="thbOn" type="checkbox">แสดงยอดเป็นบาท (≈ ฿ ตามเรทล่าสุด)</label>
+    <label class="check full"><input id="sparkOn" type="checkbox">แสดงเส้นกราฟเล็กบนการ์ด (ภาพประกอบ ไม่ใช่ราคาจริง)</label>
+    <label class="check full"><input id="qrOn" type="checkbox">แสดง QR code บนการ์ด (การ์ดเดี่ยว สรุป และปฏิทิน)</label>
+    <label class="full">ลิงก์หรือข้อความใน QR<input id="qrText" maxlength="200" placeholder="เช่น https://t.me/yourname"></label>
+    <label class="full">สไตล์ QR<select id="qrPreset"><option value="">กำหนดเอง</option><option value="std" selected>ขาว-ดำ (สแกนง่ายสุด)</option><option value="card">พื้นสีตามสีตกแต่งการ์ด</option><option value="frost">กระจกฝ้าโปร่งแสง</option><option value="dark">โหมดมืด (ลายขาวบนพื้นดำ)</option></select></label>
+    <label>สีลาย QR<input id="qrFg" type="color" value="#0b0b0d"></label>
+    <label>สีพื้นหลัง QR<input id="qrBg" type="color" value="#ffffff"></label>
+    <label>ความทึบพื้นหลัง<input id="qrAlpha" type="range" min="0" max="100" value="100"></label>
+    <label>ขนาด QR<input id="qrSize" type="range" min="60" max="140" value="100"></label>
+    <p class="hint full" id="qrHint"></p>
+    <p class="hint full">ปุ่มลัด: Ctrl+S ดาวน์โหลด PNG · Alt+C คัดลอกรูป · Alt+R เล่นแอนิเมชันใหม่ · Alt+L / Alt+S สลับ Long / Short</p>
+  </div></details>
+
+  <details><summary>เครื่องคำนวณขนาด lot</summary><div class="body">
+    <label>ความเสี่ยงต่อไม้ (%)<input id="calcRisk" type="number" step="any" value="1"></label>
+    <label>ราคา Stop Loss<input id="calcSL" type="number" step="any" placeholder="เช่น 3990"></label>
+    <label class="full">ราคา Take Profit (ไม่บังคับ)<input id="calcTP" type="number" step="any" placeholder="เช่น 4030"></label>
+    <p class="hint full" id="calcOut"></p>
+    <div class="full row"><button class="btn primary" id="useLot" type="button" disabled>ใช้ lot นี้ในออเดอร์</button></div>
+  </div></details>
+
+  <details><summary>พรีเซ็ตของฉัน</summary><div class="body">
+    <label class="full">ชื่อพรีเซ็ต<input id="pzName" placeholder="เช่น ทอง Long 1 lot"></label>
+    <div class="full row"><button class="btn primary" id="pzSave" type="button">บันทึกค่าปัจจุบัน</button></div>
+    <label class="full">พรีเซ็ตที่บันทึกไว้<select id="pzSel"></select></label>
+    <div class="full row"><button class="btn" id="pzLoad" type="button">โหลด</button><button class="btn" id="pzDel" type="button">ลบ</button></div>
+    <p class="hint full">เก็บไว้ในเบราว์เซอร์เครื่องนี้ (ไม่รวมรูปที่อัปโหลด)</p>
+  </div></details>
+
+  <details open><summary>รายการเทรด (สรุป / ปฏิทิน)</summary><div class="body">
+    <label class="full">วางข้อมูล CSV: วันที่, สินทรัพย์, กำไร$ (บรรทัดละ 1 ออเดอร์)<textarea id="csvTxt" rows="5" placeholder="2026-10-19,XAU/USD,320.5&#10;2026-10-19,EUR/USD,-85"></textarea></label>
+    <label class="full">หรือเลือกไฟล์ CSV<input id="csvFile" type="file" accept=".csv,.txt,text/csv"></label>
+    <div class="full row"><button class="btn primary" id="csvAdd" type="button">นำเข้ารายการ</button><button class="btn" id="tradeAdd" type="button">เพิ่มออเดอร์ปัจจุบัน</button><button class="btn" id="tradeClr" type="button">ล้างรายการ</button></div>
+    <p class="hint full" id="tradeInfo">ยังไม่มีรายการ</p>
+  </div></details>
+</section>
+
+<section class="stage">
+  <div class="tabs" id="viewSeg"><button type="button" data-v="card" class="on">การ์ดเดี่ยว</button><button type="button" data-v="sum">สรุปรายการ</button><button type="button" data-v="cal">ปฏิทินกำไร</button></div>
+  <div class="stagebox"><canvas id="cv" width="1600" height="900"></canvas></div>
+  <p class="meta" id="sizeInfo"></p>
+  <div>
+    <div class="row" style="padding-bottom:14px">
+      <button class="btn primary" id="save" type="button">ดาวน์โหลด PNG</button>
+      <button class="btn" id="copy" type="button">คัดลอกรูป</button>
+      <button class="btn" id="copyTxt" type="button">คัดลอกข้อความสรุป</button>
+      <button class="btn" id="replay" type="button">เล่นแอนิเมชันใหม่</button>
+      <label style="flex-direction:row;align-items:center;gap:10px;margin-left:auto">ความยาวคลิป<select id="gifLen" style="width:auto"><option value="5">5 วินาที</option><option value="10" selected>10 วินาที</option><option value="15">15 วินาที</option></select></label>
+    </div>
+    <div class="ex"><span>วิดีโอ<small>ลื่นที่สุด</small></span>
+      <div class="opts"><select id="vidFps"><option value="60" selected>60 fps</option><option value="30">30 fps</option></select><select id="vidRes"><option value="1280">กว้าง 1280</option><option value="1920" selected>กว้าง 1920</option><option value="2560">กว้าง 2560</option></select></div>
+      <button class="btn primary" id="vid" type="button">บันทึกวิดีโอ</button></div>
+    <div class="ex"><span>GIF<small>256 สี</small></span>
+      <div class="opts"><select id="gifFps"><option value="10">10 fps</option><option value="20" selected>20 fps</option><option value="25">25 fps</option></select><select id="gifSize"><option value="480">กว้าง 480</option><option value="640">กว้าง 640</option><option value="800" selected>กว้าง 800</option><option value="960">กว้าง 960</option></select></div>
+      <button class="btn" id="gif" type="button">ดาวน์โหลด GIF</button></div>
+    <p class="hint" id="msg" style="padding-top:4px">วิดีโอเป็นไฟล์ MP4 หรือ WebM ตามที่เบราว์เซอร์รองรับ อัดแบบเรียลไทม์ ต้องเปิดแท็บค้างไว้ GIF ทำ 60 fps ไม่ได้ตามข้อจำกัดของไฟล์</p>
+  </div>
+</section>
+</div>
+
+<script>
+/* ============ ข้อมูลสินทรัพย์ ============ */
+// [หมวด, ชื่อในเมนู, สัญลักษณ์บนการ์ด, mult($/1.00/lot; -1 = 100000/ราคา), pip, ทศนิยม, แหล่งราคา]
+const T={Forex:'CFD',Metals:'CFD',Energy:'CFD',Indices:'Futures',Stocks:'Futures',Crypto:'Perpetual','อื่นๆ':'CFD'};
+const A=(c,l,m,p,d,s,sym)=>({c,l,sym:sym||l,m,p,d,s,type:T[c],unit:'points'});
+const INST=[
+ A('Forex','EUR / USD',1e5,.0001,5,['y:EURUSD=X','er:EUR/USD']),A('Forex','GBP / USD',1e5,.0001,5,['y:GBPUSD=X','er:GBP/USD']),
+ A('Forex','AUD / USD',1e5,.0001,5,['y:AUDUSD=X','er:AUD/USD']),A('Forex','USD / JPY',-1,.01,3,['y:USDJPY=X','er:USD/JPY']),
+ A('Forex','USD / CHF',-1,.0001,5,['y:USDCHF=X','er:USD/CHF']),A('Forex','USD / CAD',-1,.0001,5,['y:USDCAD=X','er:USD/CAD']),
+ A('Metals','XAU / USD (ทองคำ)',100,.1,2,['gd:XAU','y:GC=F'],'XAU / USD'),A('Metals','XAG / USD (เงิน)',5000,.01,3,['gd:XAG','y:SI=F'],'XAG / USD'),
+ A('Energy','WTI Crude Oil',1000,.01,2,['y:CL=F'],'USOIL'),A('Energy','Brent Crude Oil',1000,.01,2,['y:BZ=F'],'UKOIL'),
+ A('Indices','US30 (Dow Jones)',1,1,2,['y:YM=F','y:^DJI'],'US30'),A('Indices','NASDAQ (NAS100)',1,1,2,['y:NQ=F','y:^NDX'],'NAS100'),
+ A('Indices','S&P 500 (SPX500)',1,1,2,['y:ES=F','y:^GSPC'],'SPX500'),A('Indices','DAX (GER40)',1,1,2,['y:^GDAXI'],'GER40'),A('Indices','Nikkei (JP225)',1,1,2,['y:^N225'],'JP225'),
+ ...['AAPL','TSLA','NVDA','MSFT','AMZN','GOOGL','META'].map(s=>A('Stocks',s,1,1,2,['y:'+s])),
+ A('Crypto','BTC / USD',1,1,2,['bn:BTCUSDT']),A('Crypto','ETH / USD',1,1,2,['bn:ETHUSDT']),A('Crypto','SOL / USD',1,.1,2,['bn:SOLUSDT']),
+ A('Crypto','BNB / USD',1,.1,2,['bn:BNBUSDT']),A('Crypto','XRP / USD',1,.001,4,['bn:XRPUSDT']),A('Crypto','DOGE / USD',1,.0001,5,['bn:DOGEUSDT']),
+ A('อื่นๆ','กำหนดเอง',1,1,2,[],'')
+];
+const FONTS=[['Helvetica / Arial',"'Helvetica Neue',Helvetica,Arial,sans-serif"],['Prompt',"'Prompt',sans-serif"],['Kanit',"'Kanit',sans-serif"],['Unbounded',"'Unbounded',sans-serif"],['Chakra Petch',"'Chakra Petch',sans-serif"],['Orbitron',"'Orbitron',sans-serif"],['Rajdhani',"'Rajdhani',sans-serif"],['Space Grotesk',"'Space Grotesk',sans-serif"],['Sora',"'Sora',sans-serif"],['JetBrains Mono',"'JetBrains Mono',monospace"],['Bebas Neue',"'Bebas Neue',sans-serif"],['Anton',"'Anton',sans-serif"]];
+
+/* ============ ราคา real-time ============ */
+const J=async u=>{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw 0;return r.json()};
+const SRC={
+ bn:async id=>+(await J('https://api.binance.com/api/v3/ticker/price?symbol='+id)).price,
+ gd:async id=>(await J('https://api.gold-api.com/price/'+id)).price,
+ y:async id=>{const u='https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(id)+'?interval=1m&range=1d';let d;
+   try{d=await J(u)}catch{d=await J('https://api.allorigins.win/raw?url='+encodeURIComponent(u))}return d.chart.result[0].meta.regularMarketPrice},
+ er:async id=>{const r=(await J('https://open.er-api.com/v6/latest/USD')).rates,[a,b]=id.split('/');return r[b]/r[a]}
+};
+const SNAME={bn:'Binance · real-time',gd:'Gold-API · real-time',y:'Yahoo Finance · ~real-time',er:'ExchangeRate-API · ล่าช้า'};
+const IVL={bn:1500,gd:4000,y:5000,er:60000};
+
+/* ============ helpers ============ */
+const CREDIT=String.fromCharCode(66,85,75,70,49,82,83,84); // เครดิตล็อกไว้ ไม่มีช่องให้แก้ในหน้าเว็บ
+let thbRate=0,view='card',trades=[];
+function sumCard(c,W,H,S){
+ const u=Math.min(W,H)/100,px=7*u,F=S.font,T=trades,f=(w,z)=>c.font=`${w} ${z*u}px ${F}`,win=$('cWin').value,loss=$('cLoss').value,
+ tot=T.reduce((a,t)=>a+t.pnl,0),col=tot>=0?win:loss,wn=T.filter(t=>t.pnl>0).length,cal=view==='cal',sg=v=>(v>=0?'+':'−')+fmt(Math.abs(v)),ds=T.map(t=>t.d).sort(),
+ [Y,M]=ds.length?ds[ds.length-1].split('-').map(Number):[new Date().getFullYear(),new Date().getMonth()+1],
+ mon=new Date(Y,M-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'}),per=ds.length?(ds[0]===ds[ds.length-1]?ds[0]:ds[0]+'  →  '+ds[ds.length-1]):'—';
+ let g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,`rgba(5,6,9,${S.shade*.7})`);g.addColorStop(1,`rgba(5,6,9,${Math.min(.95,S.shade+.3)})`);c.fillStyle=g;c.fillRect(0,0,W,H);
+ c.textBaseline='alphabetic';c.textAlign='left';c.shadowColor='rgba(0,0,0,.6)';c.shadowBlur=u;
+ f(700,4.2);c.fillStyle='#fff';c.fillText(S.brand,px,10*u);f(500,2.6);c.fillStyle='rgba(255,255,255,.6)';c.fillText(cal?mon:per,px,14.6*u);
+ const t0=sg(tot);f(700,14);const fs=Math.min(14,14*(W-2*px)/c.measureText(t0).width);f(700,fs);c.shadowColor=hexA(col,.5);c.shadowBlur=3*u;c.fillStyle=col;c.fillText(t0,px,30*u);c.shadowColor='rgba(0,0,0,.6)';c.shadowBlur=u;
+ f(500,3.2);c.fillStyle='rgba(255,255,255,.6)';c.fillText($('ccy').value,px,35*u);
+ const best=Math.max(0,...T.map(t=>t.pnl)),worst=Math.min(0,...T.map(t=>t.pnl)),cells=[['Trades',T.length],['Win rate',T.length?Math.round(wn/T.length*100)+'%':'—'],['Best',sg(best)],['Worst',sg(worst)]],cw=(W-2*px)/4;
+ cells.forEach((q,i)=>{const x=px+i*cw+(i?2.4*u:0);if(i){c.fillStyle='rgba(255,255,255,.14)';c.fillRect(px+i*cw,40*u,.2*u,7*u)}f(500,2.1);c.fillStyle='rgba(255,255,255,.55)';c.fillText(q[0].toUpperCase(),x,41.5*u);let z=3.9;f(600,z);while(c.measureText(String(q[1])).width>cw-3.4*u&&z>2){z-=.2;f(600,z)}c.fillStyle=i>1?(i===2?win:loss):'#fff';c.fillText(String(q[1]),x,46*u)});
+ const cy0=52*u,cy1=H-17*u;
+ if(!T.length){c.textAlign='center';f(500,2.8);c.fillStyle='rgba(255,255,255,.5)';c.fillText('ยังไม่มีรายการ · นำเข้า CSV ที่แท็บ "สรุป & เครื่องมือ"',W/2,(cy0+cy1)/2);c.textAlign='left'}
+ else if(!cal){const n=Math.min(T.length,60),A=T.slice(-n),mx=Math.max(1,...A.map(t=>Math.abs(t.pnl))),mid=(cy0+cy1)/2,hh=(cy1-cy0)/2-u,bw=(W-2*px)/n,gp=Math.min(.8*u,bw*.25);
+  c.fillStyle='rgba(255,255,255,.18)';c.fillRect(px,mid,W-2*px,.2*u);
+  A.forEach((t,i)=>{const h=Math.max(.3*u,Math.abs(t.pnl)/mx*hh);c.fillStyle=t.pnl>=0?win:loss;c.fillRect(px+i*bw+gp/2,t.pnl>=0?mid-h:mid,bw-gp,h)})}
+ else{const dm=new Date(Y,M,0).getDate(),fd=new Date(Y,M-1,1).getDay(),rows=Math.ceil((fd+dm)/7),cwd=(W-2*px)/7,ch=(cy1-cy0-3.5*u)/rows,day={};
+  T.forEach(t=>{const[y,m,d]=t.d.split('-').map(Number);if(y===Y&&m===M)day[d]=(day[d]||0)+t.pnl});const mx=Math.max(1,...Object.values(day).map(Math.abs));
+  c.textAlign='center';['S','M','T','W','T','F','S'].forEach((n,i)=>{f(500,2);c.fillStyle='rgba(255,255,255,.45)';c.fillText(n,px+i*cwd+cwd/2,cy0)});
+  for(let d=1;d<=dm;d++){const k=fd+d-1,x=px+(k%7)*cwd,y=cy0+2.5*u+Math.floor(k/7)*ch,v=day[d];rr(c,x+.3*u,y+.3*u,cwd-.6*u,ch-.6*u,.8*u);c.fillStyle=v==null?'rgba(255,255,255,.05)':hexA(v>=0?win:loss,.18+.62*Math.abs(v)/mx);c.fill();
+   c.textAlign='left';f(500,2);c.fillStyle='rgba(255,255,255,.7)';c.fillText(d,x+1.2*u,y+3*u);
+   if(v!=null){c.textAlign='center';f(700,Math.min(3,ch/u*.3));c.fillStyle='#fff';c.fillText((v>=0?'+':'−')+(Math.abs(v)>=1000?(Math.abs(v)/1000).toFixed(1)+'k':Math.abs(v).toFixed(0)),x+cwd/2,y+ch*.72)}}
+  c.textAlign='left'}
+ if(S.qr){const q=12*u*S.qrS;drawQR(c,S.qr,W-px-q,5*u,q,S)}
+ const fy=H-9*u;c.fillStyle='rgba(255,255,255,.2)';c.fillRect(px,fy-2*u,W-2*px,.2*u);
+ f(700,3);c.fillStyle='#fff';c.fillText(S.user,px,fy+3*u);f(400,2.3);c.fillStyle='rgba(255,255,255,.6)';c.fillText(S.date,px,fy+6.4*u);
+ c.textAlign='right';f(700,2.4);c.fillStyle='rgba(255,255,255,.85)';c.fillText(CREDIT,W-px,fy+5*u);const nw=c.measureText(CREDIT).width;f(500,2.2);c.fillStyle='rgba(255,255,255,.5)';c.fillText('BY',W-px-nw-2*u,fy+5.1*u);c.textAlign='left';
+}
+function qrMake(txt){
+ const D=[...new TextEncoder().encode(txt)],EC=[10,16,26,18,24,16,18,22,22,26],NB=[1,1,1,2,2,4,4,4,5,5];
+ const raw=v=>{let r=(16*v+128)*v+64;if(v>=2){const a=(v/7|0)+2;r-=(25*a-10)*a-55}if(v>=7)r-=36;return r};
+ let v=1;for(;v<=10;v++){const cp=(raw(v)>>3)-EC[v-1]*NB[v-1];if(4+(v<10?8:16)+8*D.length<=cp*8)break}
+ if(v>10)return null;
+ const cap=(raw(v)>>3)-EC[v-1]*NB[v-1],bits=[],put=(x,k)=>{for(let i=k-1;i>=0;i--)bits.push(x>>i&1)};
+ put(4,4);put(D.length,v<10?8:16);D.forEach(b=>put(b,8));put(0,Math.min(4,cap*8-bits.length));while(bits.length%8)bits.push(0);
+ for(let p=0xEC;bits.length<cap*8;p^=0xEC^0x11)put(p,8);
+ const dat=[];for(let i=0;i<bits.length;i+=8)dat.push(parseInt(bits.slice(i,i+8).join(''),2));
+ const mul=(x,y)=>{let z=0;for(let i=7;i>=0;i--){z=z<<1^(z>>7)*0x11D;z^=(y>>i&1)*x}return z};
+ const ne=EC[v-1],nb=NB[v-1],rw=raw(v)>>3,ns=nb-rw%nb,sl=rw/nb|0,gen=Array(ne).fill(0);gen[ne-1]=1;
+ for(let i=0,r=1;i<ne;i++){for(let j=0;j<ne;j++){gen[j]=mul(gen[j],r);if(j+1<ne)gen[j]^=gen[j+1]}r=mul(r,2)}
+ const rem=d=>{const r=Array(ne).fill(0);d.forEach(b=>{const f=b^r.shift();r.push(0);gen.forEach((c,i)=>r[i]^=mul(c,f))});return r};
+ const blocks=[];for(let i=0,k=0;i<nb;i++){const d=dat.slice(k,k+sl-ne+(i<ns?0:1));k+=d.length;const e=rem(d);if(i<ns)d.push(0);blocks.push(d.concat(e))}
+ const all=[];for(let i=0;i<blocks[0].length;i++)blocks.forEach((b,j)=>{if(i!=sl-ne||j>=ns)all.push(b[i])});
+ const n=v*4+17,M=Array.from({length:n},()=>Array(n).fill(false)),F=Array.from({length:n},()=>Array(n).fill(false));
+ const sf=(x,y,d)=>{if(x>=0&&x<n&&y>=0&&y<n){M[y][x]=d;F[y][x]=true}};
+ for(let i=0;i<n;i++){sf(6,i,i%2==0);sf(i,6,i%2==0)}
+ [[3,3],[n-4,3],[3,n-4]].forEach(([cx,cy])=>{for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const d=Math.max(Math.abs(dx),Math.abs(dy));sf(cx+dx,cy+dy,d!=2&&d!=4)}});
+ if(v>1){const na=(v/7|0)+2,st=Math.ceil((v*4+4)/(na*2-2))*2,ap=[6];for(let p=n-7;ap.length<na;p-=st)ap.splice(1,0,p);
+  ap.forEach((x,i)=>ap.forEach((y,j)=>{if(!(i==0&&j==0||i==0&&j==na-1||i==na-1&&j==0))for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)sf(x+dx,y+dy,Math.max(Math.abs(dx),Math.abs(dy))!=1)}))}
+ const fb=m=>{let r=m;for(let i=0;i<10;i++)r=r<<1^(r>>9)*0x537;const b=(m<<10|r)^0x5412,g=i=>(b>>i&1)==1;
+  for(let i=0;i<=5;i++)sf(8,i,g(i));sf(8,7,g(6));sf(8,8,g(7));sf(7,8,g(8));for(let i=9;i<15;i++)sf(14-i,8,g(i));
+  for(let i=0;i<8;i++)sf(n-1-i,8,g(i));for(let i=8;i<15;i++)sf(8,n-15+i,g(i));sf(8,n-8,true)};
+ fb(0);
+ if(v>=7){let r=v;for(let i=0;i<12;i++)r=r<<1^(r>>11)*0x1F25;const b=v<<12|r;for(let i=0;i<18;i++){const t=(b>>i&1)==1,a=n-11+i%3,c=i/3|0;sf(a,c,t);sf(c,a,t)}}
+ let k=0;for(let r=n-1;r>=1;r-=2){if(r==6)r=5;for(let vt=0;vt<n;vt++)for(let j=0;j<2;j++){const x=r-j,y=((r+1)&2)==0?n-1-vt:vt;if(!F[y][x]&&k<all.length*8){M[y][x]=(all[k>>3]>>(7-(k&7))&1)==1;k++}}}
+ const mk=[(x,y)=>(x+y)%2==0,(x,y)=>y%2==0,(x,y)=>x%3==0,(x,y)=>(x+y)%3==0,(x,y)=>((x/3|0)+(y/2|0))%2==0,(x,y)=>x*y%2+x*y%3==0,(x,y)=>(x*y%2+x*y%3)%2==0,(x,y)=>((x+y)%2+x*y%3)%2==0];
+ const am=m=>{for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(!F[y][x]&&mk[m](x,y))M[y][x]=!M[y][x]};
+ const pen=()=>{let p=0;for(let a=0;a<n;a++)for(const t of[0,1]){let run=1;for(let b=1;b<n;b++){const c=t?M[b][a]:M[a][b],q=t?M[b-1][a]:M[a][b-1];if(c==q){run++;if(run==5)p+=3;else if(run>5)p++}else run=1}}
+  for(let y=0;y<n-1;y++)for(let x=0;x<n-1;x++)if(M[y][x]==M[y][x+1]&&M[y][x]==M[y+1][x]&&M[y][x]==M[y+1][x+1])p+=3;
+  let d=0;M.forEach(r=>r.forEach(c=>d+=c));return p+Math.floor(Math.abs(d*20-n*n*10)/(n*n))*10};
+ let best=0,bp=1e9;for(let m=0;m<8;m++){am(m);fb(m);const p=pen();if(p<bp){bp=p;best=m}am(m)}
+ am(best);fb(best);return M}
+let qrC={};
+function drawQR(c,txt,x,y,sz,S){if(qrC.t!==txt)qrC={t:txt,m:qrMake(txt)};const m=qrC.m;if(!m)return;const n=m.length,cell=sz/(n+6),pad=cell*3;c.save();c.shadowBlur=0;c.shadowColor='transparent';rr(c,x,y,sz,sz,sz*.06);c.fillStyle=hexA(S.qrBg,S.qrA);c.fill();c.fillStyle=S.qrFg;
+ for(let r=0;r<n;r++)for(let q=0;q<n;q++)if(m[r][q])c.fillRect(x+pad+q*cell,y+pad+r*cell,cell+.4,cell+.4);c.restore()}
+function extraTxt(diff,e,pnl){const b=[];
+ if($('thbOn').checked&&thbRate)b.push('≈ '+(pnl<0?'−':'+')+'฿'+fmt(Math.abs(pnl)*thbRate,0));
+ const sl=parseFloat($('calcSL').value);if($('rOn').checked&&isFinite(sl)&&isFinite(e)&&sl!==e){const r=diff/Math.abs(e-sl);b.push((r>=0?'+':'−')+Math.abs(r).toFixed(2)+'R')}
+ const o=Date.parse($('tOpen').value),c=Date.parse($('tClose').value);if(o&&c&&c>o){const m=Math.round((c-o)/6e4),d=Math.floor(m/1440),h=Math.floor(m%1440/60);b.push('ถือ '+(d?d+'d ':'')+h+'h '+m%60+'m')}
+ return b.join('  ·  ')}
+const $=id=>document.getElementById(id);
+const fmt=(n,d=2)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const dc=s=>{const p=String(s).split('.')[1];return p?Math.min(6,p.length):0};
+const ease=x=>1-Math.pow(1-x,3);
+const hexA=(h,a)=>{const n=parseInt(h.slice(1),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`};
+const rgb=h=>{const n=parseInt(h.slice(1),16);return[n>>16,n>>8&255,n&255]};
+const hash=s=>[...s].reduce((h,c)=>Math.imul(h^c.charCodeAt(0),16777619),2166136261)>>>0;
+function rr(c,x,y,w,h,r){c.beginPath();c.roundRect?c.roundRect(x,y,w,h,Math.max(0,r)):c.rect(x,y,w,h)}
+function rng(seed){let a=seed||1;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function spark(seed,up){const r=rng(seed),n=64,w=[0];for(let i=1;i<=n;i++)w.push(w[i-1]+r()-.5);
+ const o=w.map((v,i)=>v-w[n]*i/n+(up?1:-1)*i/n*2.6),mn=Math.min(...o),mx=Math.max(...o);return o.map(v=>(v-mn)/(mx-mn||1))}
+
+/* ============ state ============ */
+let dir='buy',iconImg=null,avImg=null,bg=null,S=null,t0=performance.now(),live=null,entryAuto=true,multAuto=true,pollTok=0;
+const sel=$('inst'),cur=()=>INST[sel.value];
+let lastCat='';let og;INST.forEach((I,i)=>{if(I.c!==lastCat){og=document.createElement('optgroup');og.label=I.c+' · '+I.type;sel.appendChild(og);lastCat=I.c}og.appendChild(new Option(I.l,i))});
+FONTS.forEach(f=>$('font').add(new Option(f[0],f[1])));
+$('date').value=new Date().toLocaleDateString('en-US',{month:'short',day:'2-digit',year:'numeric'});
+
+function getState(){
+ const I=cur(),sg=dir==='buy'?1:-1,e=parseFloat($('entry').value),x=parseFloat($('exit').value),lots=parseFloat($('lots').value)||0,mult=parseFloat($('mult').value)||0,pip=parseFloat($('pip').value)||1;
+ const diff=isFinite(e)&&isFinite(x)?(x-e)*sg:0,ov=$('pnlOver').value,pnl=ov!==''?parseFloat(ov)||0:diff*lots*mult,win=pnl>=0;
+ const bal=parseFloat($('bal').value),lev=parseFloat($('lev').value)||0,pct=bal>0?pnl/bal*100:(e?diff/e*100*(lev>0?lev:1):0),d=Math.max(dc($('entry').value),dc($('exit').value),I.d);
+ const custom=INST.indexOf(I)===INST.length-1,sym=custom?($('customSym').value||'—'):I.sym,sgn=v=>(v>=0?'+':'−')+fmt(Math.abs(v),2);
+ return{W:Math.min(3000,Math.max(400,+$('W').value||1600)),H:Math.min(3000,Math.max(300,+$('H').value||900)),radius:+$('radius').value,font:$('font').value,
+  col:win?$('cWin').value:$('cLoss').value,shade:$('shadeA').value/100,fit:$('bgFit').value,sym,dir,type:(custom?$('tag').value.split(' ')[0]:I.type).toUpperCase().slice(0,10),
+  tag:$('tag').value,brand:$('brand').value,user:$('user').value,date:$('date').value,ccy:$('ccy').value,lE:$('lblEntry').value,lX:$('lblExit').value,
+  lots,pnl,win,eTxt:isFinite(e)?fmt(e,d):'—',xTxt:isFinite(x)?fmt(x,d):'—',pts:sgn(diff/pip).replace(/\.00$/,'')+' '+I.unit,pct:sgn(pct)+'%',roi:bal>0?'ROI':lev>0?'ROE':'Move',demo:$('demo').value,spark:$('sparkOn').checked,qr:$('qrOn').checked?$('qrText').value.trim():'',qrFg:$('qrFg').value,qrBg:$('qrBg').value,qrA:$('qrAlpha').value/100,qrS:$('qrSize').value/100,extra:extraTxt(diff,e,pnl),
+  acc:$('accMode').value==='custom'?$('cAcc').value:$('accMode').value==='bg'&&bgAcc?bgAcc:(win?$('cWin').value:$('cLoss').value),icon:iconImg,av:avImg,seed:hash(sym+$('user').value+Math.round(pnl))};
+}
+
+/* ============ วาดการ์ด (ใช้ทั้งพรีวิว PNG GIF) ============ */
+function glow(c,x,y,r,col,a){const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,hexA(col,a));g.addColorStop(1,hexA(col,0));c.fillStyle=g;c.fillRect(0,0,c.canvas.width,c.canvas.height)}
+function defIcon(c,x,y,s,col){c.save();c.translate(x,y);c.scale(s/24,s/24);c.strokeStyle=col;c.lineWidth=2;c.lineCap=c.lineJoin='round';rr(c,2.5,2.5,19,19,5);c.stroke();
+ c.beginPath();c.moveTo(6.5,16);c.lineTo(10.5,11.5);c.lineTo(13.5,14);c.lineTo(17.5,8.5);c.stroke();c.beginPath();c.arc(17.5,8.5,1.4,0,7);c.fillStyle=col;c.fill();c.restore()}
+function shimmer(c,W,H,t,u){const x=((t%5000)/5000)*W*1.6-W*.3,g=c.createLinearGradient(x-10*u,0,x+10*u,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,.06)');g.addColorStop(1,'rgba(255,255,255,0)');c.shadowColor='transparent';c.fillStyle=g;c.fillRect(0,0,W,H)}
+/* พื้นหลังวาดใหม่ทุกเฟรม ส่วน UI ของการ์ด (ที่นิ่ง) วาดครั้งเดียวเก็บเป็น layer แล้วแปะทับ → เรนเดอร์เร็วขึ้นมาก 60 fps ได้ */
+function draw(c,W,H,t,S,fin,bt=t){
+ const u=Math.min(W,H)/100,p=fin?1:ease(Math.min(1,t/2200));
+ c.save();rr(c,0,0,W,H,S.radius*W/S.W);c.clip();c.fillStyle='#07090d';c.fillRect(0,0,W,H);drawBg(c,W,H,S,bt);
+ if(view!=='card'){sumCard(c,W,H,S);c.restore();return}
+ if(p<1)overlay(c,W,H,t,S,fin);
+ else{const C=S._c||(S._c={}),key=W+'x'+H;let L=C[key];
+  if(!L){const lc=document.createElement('canvas');lc.width=W;lc.height=H;L=C[key]={cv:lc,geo:{}};overlay(lc.getContext('2d'),W,H,0,S,true,L.geo)}
+  c.drawImage(L.cv,0,0);
+  if(!fin&&L.geo.dx!=null){const pu=(Math.sin(t/350)+1)/2;c.beginPath();c.arc(L.geo.dx,L.geo.dy,.7*u*(1+.3*pu),0,7);c.fillStyle=S.acc;c.fill()}}
+ if(!fin)shimmer(c,W,H,t,u);
+ c.restore();
+}
+function overlay(c,W,H,t,S,fin,geo){
+ const u=Math.min(W,H)/100,k=W/S.W,p=fin?1:ease(Math.min(1,t/2200)),pulse=fin?0:(Math.sin(t/350)+1)/2,col=S.col,ac=S.acc,F=S.font,px=9*u,py=7*u,port=W<H*1.25;
+ const f=(w,s)=>c.font=`${w} ${s*u}px ${F}`,ls=v=>{if('letterSpacing' in c)c.letterSpacing=v*u+'px'};
+ let g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,`rgba(5,6,9,${S.shade*.7})`);g.addColorStop(.55,`rgba(5,6,9,${S.shade})`);g.addColorStop(1,`rgba(5,6,9,${Math.min(.95,S.shade+.25)})`);c.fillStyle=g;c.fillRect(0,0,W,H);
+ glow(c,W*.88,H*.08,W*.6,ac,.16);glow(c,W*.04,H,W*.5,ac,.08);
+ c.strokeStyle='rgba(255,255,255,.02)';c.lineWidth=1;c.beginPath();for(let x=0;x<W;x+=6*u){c.moveTo(x,0);c.lineTo(x,H)}for(let y=0;y<H;y+=6*u){c.moveTo(0,y);c.lineTo(W,y)}c.stroke();
+ c.strokeStyle=hexA(ac,.9);c.lineWidth=.35*u;const m=3*u,L=4*u;
+ [[m,m,1,1],[W-m,m,-1,1],[m,H-m,1,-1],[W-m,H-m,-1,-1]].forEach(([x,y,a,b])=>{c.beginPath();c.moveTo(x+a*L,y);c.lineTo(x,y);c.lineTo(x,y+b*L);c.stroke()});
+ c.shadowColor='rgba(0,0,0,.65)';c.shadowBlur=1*u;
+ /* top */
+ const ty=py+2.6*u;c.textBaseline='middle';c.textAlign='left';
+ if(S.icon)c.drawImage(S.icon,px,ty-2.6*u,5.2*u,5.2*u);else defIcon(c,px,ty-2.6*u,5.2*u,ac);
+ f(700,4.2);c.fillStyle='#fff';c.fillText(S.brand,px+7.4*u,ty);
+ f(500,2.3);ls(.18);const tt=S.tag.toUpperCase(),pw=c.measureText(tt).width+8*u,ph=5*u,pxr=W-px-pw;
+ rr(c,pxr,ty-ph/2,pw,ph,ph/2);c.fillStyle=hexA(ac,.12);c.fill();c.strokeStyle=hexA(ac,.7);c.lineWidth=.25*u;c.stroke();
+ if(geo){geo.dx=pxr+2.6*u;geo.dy=ty}c.beginPath();c.arc(pxr+2.6*u,ty,.7*u*(1+.3*pulse),0,7);c.fillStyle=ac;c.fill();c.fillStyle='rgba(255,255,255,.85)';c.fillText(tt,pxr+4.6*u,ty);ls(0);
+ if(S.demo){f(700,2.1);ls(.2);const dk=/REAL/.test(S.demo)?'14,203,129':/FUNDED/.test(S.demo)?'79,140,255':'255,196,0',dw=c.measureText(S.demo).width+6*u,dx=pxr-dw-2.5*u;rr(c,dx,ty-2.2*u,dw,4.4*u,.8*u);c.fillStyle=`rgba(${dk},.16)`;c.fill();c.strokeStyle=`rgba(${dk},.8)`;c.lineWidth=.22*u;c.stroke();c.fillStyle=`rgb(${dk})`;c.textAlign='center';c.fillText(S.demo,dx+dw/2,ty);c.textAlign='left';ls(0)}
+ /* layout */
+ const footH=9*u,footTop=H-py-footH,statsH=port?15.6*u:7.2*u,statsTop=footTop-3.4*u-statsH,topB=ty+5*u,midH=statsTop-2*u-topB,y0=topB+Math.max(0,(midH-34*u)/2);
+ if(S.spark&&!port){const sp=spark(S.seed,S.win),sx=W*.52,sw=W-px-sx,sy=y0+4*u,sh=26*u;c.save();c.shadowBlur=0;c.beginPath();sp.forEach((v,i)=>{const x=sx+sw*i/64,y=sy+sh*(1-v);i?c.lineTo(x,y):c.moveTo(x,y)});c.strokeStyle=col;c.lineWidth=.45*u;c.lineJoin='round';c.stroke();c.lineTo(sx+sw,sy+sh);c.lineTo(sx,sy+sh);const gr=c.createLinearGradient(0,sy,0,sy+sh);gr.addColorStop(0,hexA(col,.28));gr.addColorStop(1,hexA(col,0));c.fillStyle=gr;c.fill();c.restore()}
+ if(S.qr){const qs=(port?11:18)*u*S.qrS;drawQR(c,S.qr,W-px-qs,y0,qs,S)}
+ /* symbol + chips + pnl */
+ c.fillStyle=ac;c.fillRect(px-3.4*u,y0+.4*u,.6*u,5.6*u);
+ c.textBaseline='alphabetic';f(700,5.8);c.fillStyle='#fff';c.fillText(S.sym,px,y0+5.6*u);
+ let cx=px;const cy=y0+10.8*u;
+ const pill=(txt,fill,stroke,fg)=>{f(700,2.3);ls(.05);const w=c.measureText(txt).width+5.2*u;rr(c,cx,cy-1.9*u,w,3.8*u,.9*u);if(fill){c.fillStyle=fill;c.fill()}c.strokeStyle=stroke;c.lineWidth=.2*u;c.stroke();
+  c.fillStyle=fg;c.textBaseline='middle';c.fillText(txt,cx+2.6*u,cy+.1*u);ls(0);cx+=w+2*u};
+ pill(S.dir==='buy'?'LONG':'SHORT',hexA(col,.18),col,col);pill(S.type,null,'rgba(255,255,255,.3)','rgba(255,255,255,.75)');
+ f(500,2.6);c.fillStyle='rgba(255,255,255,.6)';c.fillText(S.lots+' lots',cx+.5*u,cy+.1*u);
+ const str=(S.pnl>=0?'+':'−')+fmt(Math.abs(S.pnl)*p);f(700,16.5);const full=(S.pnl>=0?'+':'−')+fmt(Math.abs(S.pnl)),fs=Math.min(16.5,16.5*(W-2*px)/c.measureText(full).width);
+ c.textBaseline='alphabetic';f(700,fs);c.shadowColor=hexA(col,.55);c.shadowBlur=3.5*u;c.fillStyle=col;c.fillText(str,px,y0+27.2*u);c.shadowColor='rgba(0,0,0,.65)';c.shadowBlur=1*u;
+ f(500,3.6);c.fillStyle='rgba(255,255,255,.65)';c.fillText(S.ccy,px,y0+33*u);if(S.extra){const w0=c.measureText(S.ccy).width;f(500,3.1);c.fillStyle='rgba(255,255,255,.55)';c.fillText(S.extra,px+w0+3*u,y0+33*u)}
+ /* stats */
+ const cells=[[S.lE,S.eTxt,0],[S.lX,S.xTxt,0],['Points',S.pts,1],[S.roi,S.pct,1]],cols=port?2:4,cw=(W-2*px)/cols,rh=7.8*u;
+ cells.forEach((cl,i)=>{const cc=i%cols,x=px+cc*cw+(cc?2.4*u:0),y=statsTop+Math.floor(i/cols)*rh;
+  if(cc){c.fillStyle='rgba(255,255,255,.14)';c.fillRect(px+cc*cw,y,.2*u,rh-1.4*u)}
+  c.textBaseline='top';f(500,2.1);ls(.14);c.fillStyle='rgba(255,255,255,.55)';c.fillText(cl[0].toUpperCase(),x,y);ls(0);
+  let z=3.9;f(600,z);while(c.measureText(cl[1]).width>cw-3.4*u&&z>2){z-=.2;f(600,z)}c.fillStyle=cl[2]?col:'#fff';c.fillText(cl[1],x,y+3*u)});
+ /* footer */
+ g=c.createLinearGradient(px,0,W-px,0);g.addColorStop(0,'rgba(255,255,255,.28)');g.addColorStop(1,'rgba(255,255,255,.06)');c.fillStyle=g;c.fillRect(px,footTop,W-2*px,.2*u);
+ const as=7.6*u,ay=footTop+2*u;c.save();rr(c,px,ay,as,as,1*u);c.clip();
+ if(S.av){const w=S.av.naturalWidth,h=S.av.naturalHeight,s=Math.max(as/w,as/h);c.drawImage(S.av,px+(as-w*s)/2,ay+(as-h*s)/2,w*s,h*s)}
+ else{c.fillStyle='#2a2f3a';c.fillRect(px,ay,as,as);c.fillStyle='#6b7385';c.beginPath();c.arc(px+as/2,ay+as*.38,as*.18,0,7);c.fill();c.fillRect(px+as*.2,ay+as*.68,as*.6,as)}
+ c.restore();rr(c,px,ay,as,as,1*u);c.strokeStyle=hexA(ac,.6);c.lineWidth=.2*u;c.stroke();
+ c.textBaseline='top';f(700,3);c.fillStyle='#fff';c.fillText(S.user,px+10*u,ay+.3*u);f(400,2.3);c.fillStyle='rgba(255,255,255,.6)';c.fillText(S.date,px+10*u,ay+4.5*u);
+ c.textAlign='right';f(700,2.4);ls(.12);c.fillStyle='rgba(255,255,255,.85)';c.fillText(CREDIT,W-px,ay+5*u);const nw=c.measureText(CREDIT).width;f(500,2.2);c.fillStyle='rgba(255,255,255,.5)';c.fillText('BY',W-px-nw-2*u,ay+5.1*u);ls(0);
+ const r=rng(S.seed);let bx=W-px;for(let i=0;i<26;i++){const w=(.25+r()*.5)*u;bx-=w+.35*u;c.fillStyle='rgba(255,255,255,.45)';c.fillRect(bx,ay,w,2.8*u)}
+ f(500,2);c.fillStyle='rgba(255,255,255,.4)';c.fillText('№ '+S.seed.toString(16).toUpperCase().slice(0,6),bx-1.6*u,ay+.3*u);c.textAlign='left';
+}
+
+/* ============ preview loop ============ */
+const cv=$('cv'),ctx=cv.getContext('2d');
+/* พรีวิววาดที่ความละเอียดย่อ (ด้านยาวสุด ≤1000px) และจำกัด 30fps เพื่อไม่ให้หน่วง · PNG/GIF/วิดีโอที่ส่งออกยังใช้ขนาดเต็มตามที่ตั้ง */
+function paint(){if(!S)return;const k=Math.min(1,1000/Math.max(S.W,S.H)),w=Math.round(S.W*k),h=Math.round(S.H*k);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}ctx.clearRect(0,0,w,h);const an=$('animOn').checked;draw(ctx,w,h,an?performance.now()-t0:0,S,!an,performance.now())}
+let lastP=0;(function loop(now){if(($('animOn').checked||bgAnim())&&now-lastP>=15){lastP=now;paint()}requestAnimationFrame(loop)})(0);
+function upd(){S=getState();$('customSymWrap').hidden=sel.value!=INST.length-1;$('sizeInfo').textContent=`ขนาดการ์ด ${S.W} × ${S.H} px`;paint()}
+
+/* ============ live ============ */
+function setLive(v,k){
+ const box=$('live'),lp=$('lp'),I=cur();
+ if(v==null){box.className='full live off';$('ls').textContent=I.s.length?'เชื่อมต่อราคาไม่ได้ · ใช้ค่าที่ใส่เอง':'สินทรัพย์นี้ไม่มี live · ใส่ราคาเอง';if(!I.s.length)box.className='full live';return}
+ const prev=live;live=v;box.className='full live on';lp.textContent=fmt(v,I.d);lp.className=prev==null?'':v>prev?'up':v<prev?'dn':'';$('ls').textContent=SNAME[k];
+ if(entryAuto){$('entry').value=v.toFixed(I.d);entryAuto=false}
+ if(multAuto&&I.m<0){$('mult').value=Math.round(1e5/v);multAuto=false}
+ if($('follow').checked)$('exit').value=v.toFixed(I.d);
+ upd();
+}
+async function poll(tok){
+ const I=cur();if(!I.s.length){setLive(null);return}
+ let got=null,used='y';
+ for(const s of I.s){const i=s.indexOf(':'),k=s.slice(0,i);try{const v=await SRC[k](s.slice(i+1));if(isFinite(v)&&v>0){got=v;used=k;break}}catch{}}
+ if(tok!==pollTok)return;setLive(got,used);setTimeout(()=>poll(tok),IVL[used]);
+}
+function onInst(){
+ const I=cur();live=null;entryAuto=multAuto=true;$('follow').checked=true;$('lp').textContent='—';$('lp').className='';$('live').className='full live';$('ls').textContent='กำลังเชื่อมต่อ…';
+ if(I.m>0)$('mult').value=I.m;else if(I.m<0)$('mult').value=670;$('pip').value=I.p;
+ if($('tagAuto').checked)$('tag').value=I.type+' Position';
+ upd();poll(++pollTok);
+}
+
+/* ============ events ============ */
+document.querySelectorAll('input,select').forEach(i=>i.addEventListener('input',upd));
+sel.addEventListener('change',onInst);
+$('tag').addEventListener('input',()=>{$('tagAuto').checked=false});
+$('tagAuto').addEventListener('change',()=>{if($('tagAuto').checked){$('tag').value=cur().type+' Position';upd()}});
+$('exit').addEventListener('input',()=>{$('follow').checked=false});
+$('entry').addEventListener('input',()=>{entryAuto=false});
+$('mult').addEventListener('input',()=>{multAuto=false});
+$('toEntry').onclick=()=>{if(live!=null){$('entry').value=live.toFixed(cur().d);entryAuto=false;upd()}};
+$('toMark').onclick=()=>{$('follow').checked=true;if(live!=null){$('exit').value=live.toFixed(cur().d)}upd()};
+$('preset').addEventListener('change',()=>{const v=$('preset').value;if(v!=='custom'){const[w,h]=v.split('x');$('W').value=w;$('H').value=h}upd()});
+['W','H'].forEach(id=>$(id).addEventListener('input',()=>{$('preset').value='custom'}));
+document.querySelectorAll('#dir button').forEach(b=>b.onclick=()=>{dir=b.dataset.v;document.querySelectorAll('#dir button').forEach(x=>x.classList.toggle('on',x===b));upd()});
+const loadImg=(file,cb)=>{if(!file)return cb(null);const i=new Image();i.onload=()=>cb(i);i.src=URL.createObjectURL(file)};
+$('iconFile').onchange=e=>loadImg(e.target.files[0],i=>{iconImg=i;upd()});
+$('avFile').onchange=e=>loadImg(e.target.files[0],i=>{avImg=i;upd()});
+let bgAcc=null;
+const bgAnim=()=>bg&&(bg.video||bg.frames),guess=u=>/\.(mp4|webm|mov|m4v)(\?|$)/i.test(u)?'video/mp4':/\.gif(\?|$)/i.test(u)?'image/gif':'image/png';
+function clearBg(){if(bg&&bg.el&&bg.el.remove)bg.el.remove();bg=null}
+function drawBg(c,W,H,S,bt){
+ if(!bg)return;let el=bg.el,w,h;
+ if(bg.frames){let m=bt%bg.total,f=bg.frames[0];for(const q of bg.frames){if(m<q.dur){f=q;break}m-=q.dur}el=f.bmp;w=el.width;h=el.height}
+ else if(bg.video){if(el.readyState<2)return;w=el.videoWidth;h=el.videoHeight}else{w=el.naturalWidth;h=el.naturalHeight}
+ if(!w)return;c.imageSmoothingEnabled=true;c.imageSmoothingQuality=c.canvas===cv?'medium':'high';const s=S.fit==='contain'?Math.min(W/w,H/h):Math.max(W/w,H/h);c.drawImage(el,(W-w*s)/2,(H-h*s)/2,w*s,h*s);
+}
+function sampleAcc(auto){
+ if(!bg)return;const c=document.createElement('canvas');c.width=c.height=40;const x=c.getContext('2d',{willReadFrequently:true});
+ try{drawBg(x,40,40,{fit:'cover'},performance.now());const d=x.getImageData(0,0,40,40).data;let r=0,g=0,b=0,wt=0,L=0;
+  for(let i=0;i<d.length;i+=4){L+=.2126*d[i]+.7152*d[i+1]+.0722*d[i+2];const mx=Math.max(d[i],d[i+1],d[i+2]),mn=Math.min(d[i],d[i+1],d[i+2]),s=mx?(mx-mn)/mx:0,w=s*s*mx/255;r+=d[i]*w;g+=d[i+1]*w;b+=d[i+2]*w;wt+=w}
+  if(wt<1)bgAcc='#e8eaef';else{r/=wt;g/=wt;b/=wt;const k=Math.min(2,235/(Math.max(r,g,b)||1));bgAcc='#'+[r,g,b].map(v=>Math.round(Math.min(255,v*k)).toString(16).padStart(2,'0')).join('')}
+  $('cAcc').value=bgAcc;if(auto===true){const l=L/(d.length/4)/255;$('shadeA').value=l>.5?66:l>.38?52:32}
+ }catch{msg('ดึงสีจากพื้นหลังไม่ได้ (ลิงก์ไม่อนุญาต CORS) ใช้สีกำหนดเองแทน')}
+ upd();
+}
+function mkEl(src,video){return new Promise(res=>{
+ clearBg();const el=document.createElement(video?'video':'img');
+ Object.assign(el.style,{position:'fixed',left:0,top:0,width:'2px',height:'2px',opacity:.01,pointerEvents:'none'});
+ if(video){el.muted=el.loop=el.autoplay=el.playsInline=true;el.setAttribute('playsinline','');el.preload='auto'}
+ const ok=()=>{if(video)el.play().catch(()=>{});setTimeout(()=>sampleAcc(true),350);res()};
+ el[video?'onloadeddata':'onload']=ok;el.onerror=()=>{msg('โหลดพื้นหลังไม่ได้');res()};
+ el.src=src;document.body.appendChild(el);bg={el,video};
+})}
+async function setBlob(b,type){
+ if(type==='image/gif'&&window.ImageDecoder){
+  try{const dec=new ImageDecoder({data:await b.arrayBuffer(),type:'image/gif'});await dec.tracks.ready;const n=Math.min(dec.tracks.selectedTrack.frameCount||1,500),frames=[];let total=0;
+   let acc,ax;for(let i=0;i<n;i++){const{image}=await dec.decode({frameIndex:i}),dur=Math.max(20,(image.duration||100000)/1000),sc=Math.min(1,1920/image.displayWidth,Math.sqrt(1e8/(n*image.displayWidth*image.displayHeight))),w=Math.round(image.displayWidth*sc),h=Math.round(image.displayHeight*sc);
+    if(!acc){acc=document.createElement('canvas');acc.width=w;acc.height=h;ax=acc.getContext('2d')}
+    ax.drawImage(image,0,0,w,h);const sn=document.createElement('canvas');sn.width=w;sn.height=h;sn.getContext('2d').drawImage(acc,0,0);frames.push({bmp:sn,dur});total+=dur;image.close()}
+   if(frames.length>1){clearBg();bg={frames,total};sampleAcc(true);return}}catch{}
+ }
+ await mkEl(URL.createObjectURL(b),type.startsWith('video'));
+}
+async function loadBgUrl(u){
+ u=u.trim();if(!u)return;msg('กำลังโหลดพื้นหลัง…');
+ try{const r=await fetch(u);if(!r.ok)throw 0;const b=await r.blob();await setBlob(b,b.type||guess(u));msg('โหลดพื้นหลังแล้ว');return}catch{}
+ await mkEl(u,guess(u).startsWith('video'));msg('โหลดได้เฉพาะพรีวิว: เซิร์ฟเวอร์ไม่อนุญาต CORS จึงบันทึก PNG/GIF ไม่ได้ แนะนำให้โหลดไฟล์แล้วอัปโหลดแทน');
+}
+$('bgFile').onchange=e=>{const f=e.target.files[0];if(f){$('bgUrl').value='';setBlob(f,f.type||guess(f.name))}};
+$('bgUrl').onchange=()=>loadBgUrl($('bgUrl').value);
+$('bgClear').onclick=()=>{clearBg();bgAcc=null;$('bgFile').value='';$('bgUrl').value='';upd()};
+$('resample').onclick=sampleAcc;
+$('cAcc').addEventListener('input',()=>{$('accMode').value='custom';upd()});
+$('replay').onclick=()=>{t0=performance.now()};
+const msg=t=>$('msg').textContent=t;
+function renderFinal(scale=1){const c=document.createElement('canvas');c.width=S.W*scale;c.height=S.H*scale;draw(c.getContext('2d'),c.width,c.height,0,S,true,performance.now());return c}
+$('save').onclick=()=>{try{renderFinal().toBlob(b=>dl(b,'pnl-card.png'))}catch{msg('บันทึกไม่ได้ (รูปจากลิงก์ภายนอกทำให้ canvas ถูกล็อก) ให้ใช้การอัปโหลดไฟล์แทน')}};
+$('copy').onclick=()=>{try{renderFinal().toBlob(async b=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);msg('คัดลอกรูปแล้ว')}catch{msg('คัดลอกไม่ได้ในเบราว์เซอร์นี้ ใช้ดาวน์โหลดแทน')}})}catch{msg('คัดลอกไม่ได้')}};
+function dl(b,n){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+
+/* ============ GIF encoder (inline ไม่ต้องพึ่ง library) ============ */
+// palette 255 สี (ช่อง 255 สงวนเป็นสีโปร่งใส ใช้ตัดพิกเซลที่ไม่เปลี่ยนระหว่างเฟรมให้ไฟล์เล็กลง)
+function mkPalette(frames,res=[]){
+ const px=[];
+ for(const d of frames)for(let i=0;i<d.length;i+=44)px.push(d[i]<<16|d[i+1]<<8|d[i+2]);
+ const boxes=[px];
+ while(boxes.length<255-res.length){let bi=-1,bs=1;boxes.forEach((b,i)=>{if(b.length>bs){bs=b.length;bi=i}});if(bi<0)break;const b=boxes[bi];
+  const mn=[255,255,255],mx=[0,0,0];for(const v of b)for(let h=0;h<3;h++){const x=v>>(16-8*h)&255;if(x<mn[h])mn[h]=x;if(x>mx[h])mx[h]=x}
+  const ch=[0,1,2].sort((a,c)=>(mx[c]-mn[c])-(mx[a]-mn[a]))[0],sh=16-8*ch;b.sort((a,c)=>(a>>sh&255)-(c>>sh&255));const m=b.length>>1;boxes.splice(bi,1,b.slice(0,m),b.slice(m))}
+ const pal=boxes.map(b=>{let r=0,g=0,l=0;for(const v of b){r+=v>>16;g+=v>>8&255;l+=v&255}const n=b.length||1;return[r/n|0,g/n|0,l/n|0]});
+ res.forEach(r=>pal.push(r));while(pal.length<256)pal.push([0,0,0]);return pal;
+}
+// แปลงเฟรม RGBA เป็น index ทันที (เก็บเฉพาะ index ประหยัดแรมกว่าเก็บ RGBA ~4 เท่า) · dither แบบคงที่ตามตำแหน่งจอ จึงไม่เกิดลายคืบเวลาพื้นหลังขยับ
+function mkQuant(pal){
+ const lut=new Int16Array(262144).fill(-1),B=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5],clamp=v=>v<0?0:v>255?255:v;
+ const near=(r,g,b)=>{const key=(r>>2)<<12|(g>>2)<<6|(b>>2);let v=lut[key];if(v<0){const R=(r>>2<<2)+2,G=(g>>2<<2)+2,Bl=(b>>2<<2)+2;let best=1e9;for(let i=0;i<255;i++){const q=pal[i],d=(q[0]-R)**2+(q[1]-G)**2+(q[2]-Bl)**2;if(d<best){best=d;v=i}}lut[key]=v}return v};
+ return(d,W,H)=>{const idx=new Uint8Array(W*H);for(let y=0,i=0;y<H;y++)for(let x=0;x<W;x++,i++){const o=i*4,nz=(B[(y&3)*4+(x&3)]-7.5)*.7;idx[i]=near(clamp(d[o]+nz),clamp(d[o+1]+nz),clamp(d[o+2]+nz))}return idx};
+}
+async function encodeGif(idxs,pal,W,H,delayCs,prog){
+ let buf=new Uint8Array(1<<20),n=0;const w=b=>{if(n>=buf.length){const nb=new Uint8Array(buf.length*2);nb.set(buf);buf=nb}buf[n++]=b&255},w2=v=>{w(v);w(v>>8)};
+ [..."GIF89a"].forEach(ch=>w(ch.charCodeAt(0)));w2(W);w2(H);w(0xF7);w(0);w(0);pal.forEach(q=>q.forEach(w));
+ w(0x21);w(0xFF);w(11);[..."NETSCAPE2.0"].forEach(ch=>w(ch.charCodeAt(0)));w(3);w(1);w2(0);w(0);
+ for(let f=0;f<idxs.length;f++){
+  let idx=idxs[f];
+  if(f>0){const pv=idxs[f-1],o=new Uint8Array(idx.length);for(let i=0;i<idx.length;i++)o[i]=idx[i]===pv[i]?255:idx[i];idx=o}
+  w(0x21);w(0xF9);w(4);w(f>0?5:4);w2(delayCs);w(255);w(0);w(0x2C);w2(0);w2(0);w2(W);w2(H);w(0);w(8);
+  let size=9,next=258,bits=0,acc=0,chunk=[];const dict=new Map();
+  const flush=()=>{if(chunk.length){w(chunk.length);chunk.forEach(w);chunk=[]}};
+  const emit=c=>{acc|=c<<bits;bits+=size;while(bits>=8){chunk.push(acc&255);acc>>=8;bits-=8;if(chunk.length===255)flush()}};
+  const bump=()=>{if(next===(1<<size)&&size<12)size++};
+  emit(256);let cur=idx[0];
+  for(let i=1;i<idx.length;i++){const k=idx[i],key=cur<<8|k,v=dict.get(key);
+   if(v!==undefined){cur=v;continue}
+   emit(cur);bump();if(next<4096){dict.set(key,next++)}else{emit(256);dict.clear();next=258;size=9}cur=k}
+  emit(cur);bump();emit(257);if(bits>0)chunk.push(acc&255);flush();w(0);
+  if(prog)prog(f);await new Promise(r=>setTimeout(r));
+ }
+ w(0x3B);return new Blob([buf.subarray(0,n)],{type:'image/gif'});
+}
+// เลื่อนวิดีโอไปเวลา tm แล้วรอให้เฟรมพร้อมวาดจริง (ของเดิมรอ onseeked อย่างเดียว บางครั้งได้เฟรมเก่าซ้ำ → กระตุก)
+function seekTo(v,tm){return new Promise(res=>{let d=0;const fin=()=>{if(d)return;d=1;v.removeEventListener('seeked',onS);res()},onS=()=>setTimeout(fin,25);
+ if(Math.abs(v.currentTime-tm)<.002){setTimeout(fin,0);return}
+ v.addEventListener('seeked',onS);v.currentTime=tm;setTimeout(fin,1500)})}
+$('gif').onclick=async()=>{
+ const SS=S,btn=$('gif'),secs=Math.min(15,+$('gifLen').value||10),fps=+$('gifFps').value||20,total=secs*fps,k=Math.min(1,(+$('gifSize').value||800)/Math.max(SS.W,SS.H)),gw=Math.round(SS.W*k),gh=Math.round(SS.H*k),v=bg&&bg.video?bg.el:null;
+ btn.disabled=true;
+ try{
+  const c=document.createElement('canvas');c.width=gw;c.height=gh;const x=c.getContext('2d',{willReadFrequently:true});
+  if(v)v.pause();
+  const grab=async t=>{
+   if(v){const dur=v.duration||1;await seekTo(v,Math.min((t/1000)%dur,Math.max(0,dur-.001)))}
+   x.fillStyle='#0c0e12';x.fillRect(0,0,gw,gh);draw(x,gw,gh,t+2300,SS,false,t);return x.getImageData(0,0,gw,gh).data};
+  msg('กำลังเตรียมสี…');const samples=[];for(let i=0;i<8;i++)samples.push(await grab(i*secs*1000/8));
+  const pal=mkPalette(samples,[[255,255,255],rgb(SS.col),rgb(SS.acc),[7,9,13]]),quant=mkQuant(pal),idxs=[];
+  for(let i=0;i<total;i++){idxs.push(quant(await grab(i*1000/fps),gw,gh));if(i%3==0){msg(`กำลังเรนเดอร์เฟรม ${i+1}/${total}…`);await new Promise(r=>setTimeout(r))}}
+  const blob=await encodeGif(idxs,pal,gw,gh,Math.round(100/fps),i=>{if(i%4==0)msg(`กำลังบีบอัด GIF ${i+1}/${total}…`)});
+  dl(blob,'pnl-card.gif');msg(`เสร็จแล้ว · GIF ${secs} วินาที · ${fps} fps · ${gw}×${gh} · ${(blob.size/1048576).toFixed(1)} MB`);
+ }catch(e){msg('สร้าง GIF ไม่สำเร็จ: '+(e&&e.message||e))}
+ if(v)v.play().catch(()=>{});
+ btn.disabled=false;
+};
+
+/* ============ บันทึกวิดีโอแบบเรียลไทม์ (MP4/WebM) · วิดีโอพื้นหลังเล่นตามปกติ ไม่ต้อง seek จึงลื่นที่สุด ============ */
+$('vid').onclick=async()=>{
+ if(!window.MediaRecorder){msg('เบราว์เซอร์นี้ไม่รองรับการบันทึกวิดีโอ');return}
+ const SS=S,btn=$('vid'),secs=Math.min(15,+$('gifLen').value||10),fps=+$('vidFps').value||60,k=Math.min(1,(+$('vidRes').value||1920)/Math.max(SS.W,SS.H)),vw=Math.round(SS.W*k)&~1,vh=Math.round(SS.H*k)&~1,v=bg&&bg.video?bg.el:null;
+ const mime=['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(t=>MediaRecorder.isTypeSupported(t))||'';
+ const bps=Math.round(Math.min(60e6,Math.max(8e6,vw*vh*fps*.12)));
+ btn.disabled=true;
+ try{
+  const c=document.createElement('canvas');c.width=vw;c.height=vh;const x=c.getContext('2d',{alpha:false});
+  if(v){v.currentTime=0;await v.play().catch(()=>{})}
+  const rec=new MediaRecorder(c.captureStream(fps),mime?{mimeType:mime,videoBitsPerSecond:bps}:{videoBitsPerSecond:bps}),chunks=[];
+  rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  const done=new Promise(r=>rec.onstop=r),t1=performance.now();let last=0,n=0;
+  x.fillStyle='#0c0e12';x.fillRect(0,0,vw,vh);draw(x,vw,vh,2300,SS,false,0);rec.start();
+  await new Promise(res=>{const tick=now=>{const t=performance.now()-t1;if(t>=secs*1000){res();return}
+   if(now-last>=1000/fps-3){last=now;x.fillStyle='#0c0e12';x.fillRect(0,0,vw,vh);draw(x,vw,vh,t+2300,SS,false,t);if(n++%8==0)msg(`กำลังบันทึกวิดีโอ ${(t/1000).toFixed(1)}/${secs} วินาที · อย่าสลับแท็บ`)}
+   requestAnimationFrame(tick)};requestAnimationFrame(tick)});
+  rec.stop();await done;
+  const blob=new Blob(chunks,{type:rec.mimeType||mime||'video/webm'}),ext=/mp4/.test(blob.type)?'mp4':'webm';
+  dl(blob,'pnl-card.'+ext);msg(`เสร็จแล้ว · วิดีโอ .${ext} · ${secs} วินาที · ${fps} fps · ${vw}×${vh} · ${(blob.size/1048576).toFixed(1)} MB`);
+ }catch(e){msg('บันทึกวิดีโอไม่สำเร็จ (พื้นหลังจากลิงก์ที่ไม่เปิด CORS ทำให้ canvas ถูกล็อก ให้อัปโหลดไฟล์แทน): '+(e&&e.message||e))}
+ btn.disabled=false;
+};
+
+/* ============ start ============ */
+sel.value=INST.findIndex(i=>i.sym==='XAU / USD');
+Promise.all(FONTS.map(f=>document.fonts.load('700 20px '+f[1]).catch(()=>0))).then(()=>{upd()});
+document.fonts.addEventListener&&document.fonts.addEventListener('loadingdone',()=>upd());
+onInst();
+/* ============ เครื่องคำนวณ lot / พรีเซ็ต / ข้อความสรุป ============ */
+(()=>{const g=id=>parseFloat($(id).value),out=$('calcOut'),useBtn=$('useLot');let lotv=null;
+const calc=()=>{const bal=g('bal'),rk=g('calcRisk'),e=g('entry'),sl=g('calcSL'),tp=g('calcTP'),m=g('mult');lotv=null;
+ if(!(bal>0)||!(rk>0)||!isFinite(e)||!isFinite(sl)||sl===e||!(m>0)){out.textContent='กรอกบาลานซ์พอร์ต (หมวดออเดอร์), ความเสี่ยง % และราคา Stop Loss เพื่อคำนวณ';useBtn.disabled=true;return}
+ const risk=bal*rk/100,dist=Math.abs(e-sl),lot=risk/(dist*m);lotv=lot;
+ let t=`เสี่ยงได้ $${fmt(risk)} · ระยะ SL ${fmt(dist,cur().d)} · lot ที่เหมาะสม ${lot.toFixed(2)}`;
+ if(isFinite(tp)&&tp!==e){const rw=Math.abs(tp-e)/dist;t+=` · R:R 1:${rw.toFixed(2)} · กำไรเป้าหมาย $${fmt(risk*rw)}`}
+ out.textContent=t;useBtn.disabled=false};
+['calcRisk','calcSL','calcTP','bal','entry','mult'].forEach(id=>$(id).addEventListener('input',calc));
+useBtn.onclick=()=>{if(lotv){$('lots').value=lotv.toFixed(2);$('lots').dispatchEvent(new Event('input',{bubbles:true}))}};
+setInterval(()=>{if(live!=null)calc()},2000);calc()})();
+(()=>{const K='pnlStudioPresets',ids=[...document.querySelectorAll('.panel input,.panel select')].filter(e=>e.id&&e.type!=='file'&&!/^pz/.test(e.id)).map(e=>e.id),ps=$('pzSel');
+const rd=()=>{try{return JSON.parse(localStorage.getItem(K))||{}}catch{return{}}},wr=o=>{try{localStorage.setItem(K,JSON.stringify(o))}catch{msg('บันทึกพรีเซ็ตไม่ได้ในเบราว์เซอร์นี้')}};
+const fill=pick=>{const n=Object.keys(rd());ps.innerHTML='';n.forEach(k=>ps.add(new Option(k,k)));if(!n.length)ps.add(new Option('ยังไม่มีพรีเซ็ต',''));if(pick)ps.value=pick};
+$('pzSave').onclick=()=>{const name=$('pzName').value.trim();if(!name){msg('ตั้งชื่อพรีเซ็ตก่อนบันทึก');return}
+ const o=rd();o[name]={dir,v:Object.fromEntries(ids.map(id=>[id,$(id).type==='checkbox'?$(id).checked:$(id).value]))};wr(o);fill(name);msg('บันทึกพรีเซ็ต “'+name+'” แล้ว')};
+$('pzLoad').onclick=()=>{const o=rd()[ps.value];if(!o)return;
+ $('inst').value=o.v.inst;onInst();
+ ids.forEach(id=>{if(id==='inst')return;const el=$(id);if(el.type==='checkbox')el.checked=!!o.v[id];else if(o.v[id]!=null)el.value=o.v[id]});
+ document.querySelector(`#dir button[data-v="${o.dir}"]`).click();entryAuto=multAuto=false;upd();$('bal').dispatchEvent(new Event('input'));msg('โหลดพรีเซ็ต “'+ps.value+'” แล้ว')};
+$('pzDel').onclick=()=>{const o=rd();if(o[ps.value]){delete o[ps.value];wr(o);fill();msg('ลบพรีเซ็ตแล้ว')}};
+fill()})();
+$('copyTxt').onclick=async()=>{const s=S,t=`${s.sym} · ${s.dir==='buy'?'LONG':'SHORT'}\nEntry ${s.eTxt} → ${s.xTxt}\n${s.pts} (${s.pct})\nPnL ${s.pnl>=0?'+':'−'}$${fmt(Math.abs(s.pnl))}`;
+ try{await navigator.clipboard.writeText(t);msg('คัดลอกข้อความสรุปแล้ว')}catch{msg('คัดลอกไม่ได้ในเบราว์เซอร์นี้')}};
+const THEMES={'Neon Dark':['Chakra Petch',28,'#00f5a0','#ff3d6e','#00d4ff',35],'Gold Luxury':['Sora',12,'#e8c872','#ff6b6b','#e8c872',45],'Terminal Green':['JetBrains Mono',4,'#39ff88','#ff4d4d','#39ff88',50],'Minimal':['Helvetica / Arial',20,'#0ecb81','#f6465d','#e6e8ec',30],'Sunset':['Space Grotesk',36,'#ffb347','#ff5e78','#ff8a5c',35]};
+Object.keys(THEMES).forEach(k=>$('theme').add(new Option(k,k)));
+$('theme').addEventListener('change',()=>{const t=THEMES[$('theme').value];if(!t)return;$('font').value=FONTS.find(f=>f[0]===t[0])[1];$('radius').value=t[1];$('cWin').value=t[2];$('cLoss').value=t[3];$('cAcc').value=t[4];$('accMode').value='custom';$('shadeA').value=t[5];upd()});
+addEventListener('keydown',e=>{const k=e.code,d=v=>document.querySelector(`#dir button[data-v="${v}"]`).click();
+ if((e.ctrlKey||e.metaKey)&&k==='KeyS'){e.preventDefault();$('save').click()}
+ else if(e.altKey&&k==='KeyC'){e.preventDefault();$('copy').click()}
+ else if(e.altKey&&k==='KeyR'){e.preventDefault();$('replay').click()}
+ else if(e.altKey&&k==='KeyL'){e.preventDefault();d('buy')}
+ else if(e.altKey&&k==='KeyS'){e.preventDefault();d('sell')}});
+const loadThb=async()=>{try{thbRate=(await J('https://open.er-api.com/v6/latest/USD')).rates.THB;upd()}catch{}};loadThb();setInterval(loadThb,6e5);
+const TAB=['o','d','d','d','d','o','t','t'],pd=[...document.querySelectorAll('.panel>details')];pd.forEach((d,i)=>d.dataset.tab=TAB[i]);
+const setTab=t=>{pd.forEach(d=>d.hidden=d.dataset.tab!==t);document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t))};
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.t));setTab('o');
+const setView=v=>{view=v;document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));upd()};
+document.querySelectorAll('#viewSeg button').forEach(b=>b.onclick=()=>setView(b.dataset.v));
+const tInfo=()=>{$('tradeInfo').textContent=trades.length?`${trades.length} รายการ · รวม ${fmt(trades.reduce((a,t)=>a+t.pnl,0))}`:'ยังไม่มีรายการ'};
+const parseCsv=txt=>txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{const f=l.split(/[,\t;]/).map(x=>x.trim()),p=parseFloat(f[f.length-1]),m=f.map(x=>x.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/)).find(Boolean);
+ return isFinite(p)?{d:m?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:new Date().toISOString().slice(0,10),s:f.find(x=>x&&!/^[-+\d.]+$/.test(x)&&!/^\d{4}[-\/]/.test(x))||'',pnl:p}:null}).filter(Boolean);
+$('csvAdd').onclick=()=>{const a=parseCsv($('csvTxt').value);trades.push(...a);$('csvTxt').value='';tInfo();if(a.length)setView('sum');else upd();msg(a.length?`นำเข้า ${a.length} รายการแล้ว`:'ไม่พบรายการที่อ่านได้ (รูปแบบ: วันที่,สินทรัพย์,กำไร)')};
+$('csvFile').onchange=async e=>{const f=e.target.files[0];if(f)$('csvTxt').value=await f.text()};
+$('tradeAdd').onclick=()=>{trades.push({d:new Date().toISOString().slice(0,10),s:S.sym,pnl:S.pnl});tInfo();upd();msg('เพิ่มออเดอร์ปัจจุบันเข้ารายการแล้ว')};
+$('tradeClr').onclick=()=>{trades=[];tInfo();upd()};
+const qrHint=()=>{const L=h=>{const[r,g,b]=rgb(h).map(v=>{v/=255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4});return .2126*r+.7152*g+.0722*b},a=L($('qrFg').value),b=L($('qrBg').value),cr=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+ $('qrHint').textContent=cr<3?'⚠ ความต่างสีต่ำ QR อาจสแกนไม่ติด':a>b?'ลายสว่างกว่าพื้น: บางแอปสแกนไม่ได้ ควรทดสอบก่อนโพสต์':'ความต่างสีดี สแกนง่าย'};
+['qrFg','qrBg'].forEach(id=>$(id).addEventListener('input',()=>{$('qrPreset').value='';qrHint()}));
+$('qrPreset').addEventListener('change',()=>{const P={std:['#0b0b0d','#ffffff',100],card:['#0b0b0d',S.acc,100],frost:['#0b0b0d','#ffffff',70],dark:['#ffffff','#0b0b0d',75]}[$('qrPreset').value];if(!P)return;$('qrFg').value=P[0];$('qrBg').value=P[1];$('qrAlpha').value=P[2];upd();qrHint()});qrHint();
+(()=>{const tk=()=>{$('tkSym').textContent=sel.options[sel.selectedIndex].text;$('tkPx').textContent=$('lp').textContent;$('tkPx').className=$('lp').className;$('tkSrc').textContent=$('ls').textContent;$('tape').dataset.s=$('live').classList.contains('on')?'on':'off'};
+new MutationObserver(tk).observe($('live'),{subtree:true,childList:true,characterData:true,attributes:true});sel.addEventListener('change',tk);
+const ck=()=>$('tkClk').textContent=new Date().toISOString().slice(11,19)+' UTC';ck();setInterval(ck,1000);tk()})();
+</script>
+</body>
+</html>
