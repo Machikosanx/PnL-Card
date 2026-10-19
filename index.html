@@ -299,8 +299,7 @@ const J=async u=>{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw 0;ret
 const SRC={
  bn:async id=>+(await J('https://api.binance.com/api/v3/ticker/price?symbol='+id)).price,
  gd:async id=>(await J('https://api.gold-api.com/price/'+id)).price,
- y:async id=>{const u='https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(id)+'?interval=1m&range=1d';let d;
-   try{d=await J(u)}catch{d=await J('https://api.allorigins.win/raw?url='+encodeURIComponent(u))}return d.chart.result[0].meta.regularMarketPrice},
+ y:async id=>{const d=await J('/api/yahoo?symbol='+encodeURIComponent(id)+'&interval=1m&range=1d');return d.chart.result[0].meta.regularMarketPrice},
  er:async id=>{const r=(await J('https://open.er-api.com/v6/latest/USD')).rates,[a,b]=id.split('/');return r[b]/r[a]}
 };
 const SNAME={bn:'Binance · real-time',gd:'Gold-API · real-time',y:'Yahoo Finance · ~real-time',er:'ExchangeRate-API · ล่าช้า'};
@@ -839,7 +838,7 @@ $('gSave').onclick=()=>{let th='';try{th=renderFinal(.2).toDataURL('image/jpeg',
 $('gClr').onclick=()=>{wr([]);show()};show()})();
 (()=>{const CAND={
  bn:async id=>(await J('https://api.binance.com/api/v3/klines?symbol='+id+'&interval=5m&limit=200')).map(k=>({o:+k[1],h:+k[2],l:+k[3],c:+k[4]})),
- y:async id=>{const u='https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(id)+'?interval=5m&range=5d';let d;try{d=await J(u)}catch{d=await J('https://api.allorigins.win/raw?url='+encodeURIComponent(u))}
+ y:async id=>{const d=await J('/api/yahoo?symbol='+encodeURIComponent(id)+'&interval=5m&range=5d');
   const r=d.chart.result[0],q=r.indicators.quote[0];return r.timestamp.map((t,i)=>({o:q.open[i],h:q.high[i],l:q.low[i],c:q.close[i]})).filter(x=>x.o!=null&&x.h!=null&&x.l!=null&&x.c!=null).slice(-200)}};
 const KEY='pnlWatch',DEF=['XAU / USD','NASDAQ','BTC / USD','ETH / USD'],MAX=8,el=$('mw'),selW=$('mwSel');let W=[],uid=0,AC=null;
 const zt=(z,d)=>z?fmt(z.lo,d)+' – '+fmt(z.hi,d)+' · '+z.k:'ไม่พบโซน',watchable=I=>I.s.length>0,
@@ -866,7 +865,7 @@ const cand=async(w,g)=>{const s=w.s;let C=null;
  for(const ck of w.ck){const j=ck.indexOf(':');try{const r=await CAND[ck.slice(0,j)](ck.slice(j+1));if(r&&r.length>=40){C=r;break}}catch{}}
  if(w.dead||g!==w.gen)return;
  if(C){if(w.adj&&s.live!=null){const ad=s.live-C[C.length-1].c;C=C.map(x=>({o:x.o+ad,h:x.h+ad,l:x.l+ad,c:x.c+ad}))}s.C=C;s.a=smc(C)}
- else if(!s.C.length){const e=q$(w,'.mwi');if(e)e.textContent=w.ck.length?'โหลดข้อมูลกราฟไม่ได้ กำลังลองใหม่… (ตรวจว่าเปิดไฟล์ในเบราว์เซอร์ที่ต่อเน็ตได้)':'สินทรัพย์นี้ไม่มีแหล่งข้อมูลกราฟ'}
+ else if(!s.C.length){const e=q$(w,'.mwi');if(e)e.textContent=w.ck.length?'โหลดข้อมูลกราฟไม่ได้ กำลังลองใหม่… (หุ้น/ดัชนี/Forex ต้องมีไฟล์ api/yahoo.js บน Vercel)':'สินทรัพย์นี้ไม่มีแหล่งข้อมูลกราฟ'}
  mshow(w);mdraw(w);if(w.ck.length)setTimeout(()=>cand(w,g),C?30000:8000)};
 const price=async(w,g)=>{let got=null;for(const q of w.pri){const j=q.indexOf(':'),k=q.slice(0,j);try{const v=await SRC[k](q.slice(j+1));if(isFinite(v)&&v>0){got=v;w.s.k=k;break}}catch{}}
  if(w.dead||g!==w.gen)return;if(got!=null)w.s.live=got;mshow(w);mdraw(w);setTimeout(()=>price(w,g),Math.max(IVL[w.s.k]||5000,3000))};
